@@ -1,0 +1,376 @@
+---
+title: "Explorative Data Analysis in R"
+author: "Devika"
+date: "2023-11-18"
+output: html_document
+---
+## R Markdown
+
+
+The tidyverse is a collection of R packages, including ggplot2, dplyr, and tidyr, designed for coherent and efficient data analysis and visualization through a consistent and tidy data manipulation approach. Install it with install.packages("tidyverse") and load it with library(tidyverse).
+
+```{r}
+install.packages("tidyverse", repos = "http://cran.us.r-project.org")
+library(tidyverse)
+```
+
+* **dplyr** : A versatile R package for data manipulation that provides intuitive functions like filter, select, group_by, and summarize, facilitating efficient and readable data wrangling.
+
+* **skimr** : A handy R package offering summary statistics and data summaries with the skim() function, providing a quick overview of numeric and categorical variables in a dataset.
+
+* **janitor** : An R package for data cleaning and tidying, providing functions like clean_names() for standardized column names and remove_empty() for handling missing values and empty rows efficiently.
+
+Install and loading the packages
+
+```{r}
+
+install.packages("dplyr",repos = "http://cran.us.r-project.org")
+install.packages("skimr",repos = "http://cran.us.r-project.org")
+install.packages("janitor",repos = "http://cran.us.r-project.org")
+
+library(dplyr)
+library(skimr)
+library(janitor)
+
+```
+```{r}
+install.packages("readr")
+library(readr)
+
+```
+```{r}
+# To get the current directory of this project
+
+getwd()
+```
+Load the diamonds dataset using **readr** package **read.csv()**. Just print the top 5 rows of dataset using head()
+
+```{r}
+library(datasets)
+setwd("C://Users/DEVIKA/Desktop/R_Codes/Project")
+df = read.csv("diamonds.csv")
+head(df,5)
+```
+**glimpse()** : A function from the **dplyr** package that provides a concise and informative summary of a data frame, displaying variable types, first few observations, and additional metadata.
+
+```{r}
+glimpse(df)
+```
+**str()** : A base R function that displays the structure of an object, providing information about its type and the first few elements or components.
+
+```{r}
+str(df)
+```
+**colnames()** : A base R function used to retrieve or set the column names of a data frame or matrix, facilitating easy manipulation and exploration of variable names.
+
+```{r}
+colnames(df)
+```
+**tibble:** An R package providing the `tibble` class, an enhanced version of data frames. Tibbles are part of the `tidyverse` ecosystem, offering improved printing, subsetting, and compatibility with modern data analysis workflows.
+
+Install and load tibble package
+```{r}
+install.packages("tibble")
+library(tibble)
+as_tibble(df)
+```
+
+**summary()** : A base R function used to generate summary statistics of numerical data, providing key measures such as mean, median, quartiles, and extreme values for a quick overview of the distribution.
+
+```{r}
+summary(df)
+```
+Here we are looking to get trends in **carat** variable of dataset
+
+```{r}
+summary(df$carat)
+```
+Here we are looking to get trends in **color** variable of dataset
+
+```{r}
+summary(df$color)
+```
+## Data Transforming Techniques
+
+**skim_without_charts()** : A function from the **skimr** package that generates a concise summary of data statistics without charts, offering key insights into the distribution and characteristics of variables in a dataset.
+
+```{r}
+library(skimr)
+skim_without_charts(df)
+```
+**select()**: A function from the **dplyr** package used for column selection in data frames, allowing users to choose and reorder specific columns to streamline data manipulation tasks.
+In this we are selecting only **cut** column of dataset.
+
+```{r}
+library(dplyr)
+
+new_df <- df %>% 
+  select(cut)   ## only species
+head(new_df,5)
+```
+**count()** : A function from the **dplyr** package that is used to count the number of observations or occurrences of unique values within a data frame, facilitating basic frequency analysis.
+The code chunk gives no of observations of each diamond cut type.
+
+```{r}
+diamonds %>% count(cut)
+```
+The above code chunk selects multiple columns of the dataset i.e trimming the dataset
+
+```{r}
+trimmed_df <- df %>% 
+  select(carat, cut, price)
+head(trimmed_df,5)
+```
+The code below provides us with summary of cut column.
+
+```{r}
+count_cuts <- df %>%
+  group_by(cut) %>%
+  summarise(count = n()) 
+View(count_cuts)
+```
+
+**rename()** : A function from the **dplyr** package that enables the renaming of columns in a data frame, providing a flexible and straightforward way to update variable names.
+
+The code renames the cut column to cut_model.
+```{r}
+renamed <- df %>% 
+  rename(cut_model = cut)
+head(renamed,5)
+```
+
+```{r}
+install.packages("janitor")
+library(janitor)
+
+#clean_names(df)
+```
+**unite()** : A function from the **tidyr** package in the **tidyverse** ecosystem, used for combining or uniting multiple columns into a single column by concatenating their values, helping reshape and restructure data efficiently.
+
+A data cleaning function, which combines x,y,z values under measurements column.
+
+```{r}
+united_df <- df %>%
+  unite(measurements, x, y, z, sep = ", ")
+head(united_df,5)
+```
+**mutate()** : A function from the **dplyr** package that allows the creation of new variables or the modification of existing ones within a data frame, providing a powerful tool for data manipulation and feature engineering.
+
+The above code modifies price column by decreasing by 50 dollars and updating as diwali_sale_price.
+
+```{r}
+sale <- united_df %>%
+  mutate(diwali_sale_price = price - 50)
+head(sale,10)
+```
+This code removes the original price column of dataset.
+
+```{r}
+diamonds <- df %>%
+  mutate(diwali_sale_price = price - 50) %>%
+  select(-price) 
+head(diamonds,10)
+```
+
+Some statistical functions to find stats of various variable like minimum, maximum , mean, sum etc.
+
+```{r}
+
+summary_stats <- sale %>%
+  summarize(
+    total_carat = sum(carat),
+    mean_price = mean(price),
+    min_depth = min(depth),
+    max_table = max(table),
+    median_diwali_sale_price = median(diwali_sale_price)
+  )
+
+summary_stats
+```
+
+```{r}
+result <- df %>%
+  filter(cut %in% c("Ideal", "Premium"), color %in% c("D", "E", "F")) %>%
+  group_by(cut, color) %>%
+  summarise(
+    avg_price = mean(price),
+    total_carat = sum(carat),
+    min_depth = min(depth),
+    max_table = max(table),
+    count = n()
+  ) %>%
+  arrange(desc(avg_price))
+
+result
+```
+**filter()** : A function from the **dplyr** package in the **tidyverse** ecosystem, utilized for subsetting or filtering rows of a data frame based on specified conditions, providing a flexible and intuitive approach to data extraction.
+
+**arrange()** : A function from the **dplyr** package in the **tidyverse** ecosystem, used to reorder rows of a data frame based on one or more columns, facilitating easy exploration and analysis of data in a desired order.
+
+
+The below code filters only **Good** and **premium** values of cut model of Color **E** with depth greater than 60 and arranging in ascending values and then displaying few columns of dataset.
+
+```{r}
+filtered <- df %>%
+  filter(cut=="Good" | cut=="premium") %>%
+  filter(color=="E" & depth>60.0) %>%
+  arrange(depth) %>%
+  select(carat,cut,color,depth,price)
+head(filtered,10)
+```
+
+The below code filters the observations having width of diamond 'y' between 3 and 20 using **between()** from **dplyr** package. 
+
+```{r}
+diamonds2 <- diamonds %>% 
+  filter(between(y, 3, 20))
+head(diamonds2,15)
+```
+**ggplot2:** An R package within the **tidyverse** ecosystem, providing a powerful and flexible system for creating static and dynamic visualizations. `ggplot2` employs a grammar of graphics approach, allowing users to build complex and customized plots layer by layer.
+
+Installing and uploading ggplot2 package.
+
+```{r}
+install.packages("ggplot2")
+
+library(ggplot2)
+```
+```{r}
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = clarity))
+```
+
+```{r}
+ggplot(data = diamonds) +
+  geom_bar(mapping = aes(x = cut))
+```
+
+```{r}
+price_summary <- df %>%
+  group_by(clarity) %>%
+  summarize(median_price = median(price))
+price_summary
+```
+
+```{r}
+library(dplyr)
+price_summary <- df %>%
+  group_by(clarity) %>%
+  summarize(median_price = median(price))
+
+# Bar chart
+ggplot(price_summary, aes(x = clarity, y = median_price)) +
+  geom_bar(stat = "identity", fill = "lightgreen")
+  
+```
+
+
+```{r}
+ggplot(data=df) + 
+  geom_point(mapping=aes(x=carat,y=price)) 
+```
+
+```{r}
+ggplot(data = df) + 
+  geom_point(mapping = aes(x = carat, y = price), alpha = 0.1)
+```
+
+```{r}
+ggplot(data=df) +
+  geom_smooth(mapping=aes(x=carat ,y=price, linetype = cut, color=cut))
+```
+
+```{r}
+ggplot(data=df) +
+  geom_smooth(mapping=aes(x=carat ,y=price, color=cut))
+```
+
+```{r}
+ggplot(data=df) +
+  geom_smooth(mapping=aes(x=carat ,y=price, color=cut))
+```
+
+```{r}
+ggplot(data=df) +
+  geom_point(mapping=aes(x=carat ,y=price, color=cut, shape = cut))
+
+```
+
+```{r}
+ggplot(data=df) +
+  geom_point(mapping=aes(x=carat ,y=price, color=cut, shape = cut, size=color))
+```
+
+```{r}
+ggplot(data=df) +
+  geom_smooth(mapping=aes(x=carat,y=price)) +
+  geom_point(mapping=aes(x=carat,y=price))
+```
+
+```{r}
+library(ggplot2)
+ggplot(data = diamonds) +
+  geom_histogram(mapping = aes(x = carat), binwidth = 0.5)
+```
+
+```{r}
+ggplot(data = diamonds) +
+  geom_histogram(mapping = aes(x = carat), binwidth = 0.1)
+```
+
+```{r}
+library(dplyr)
+result <- df %>% filter(x == y)
+head(result,5)
+
+ggplot(diamonds) + 
+  geom_histogram(mapping = aes(x = y), binwidth = 0.5)
+```
+```{r}
+boxplot(x = df$X)
+```
+```{r}
+library(ggplot2)
+ggplot(df, aes(x = cut, y = price)) +
+  geom_boxplot(fill = "skyblue")
+```
+
+```{r}
+ggplot(diamonds, aes(x = clarity, y = depth)) +
+  geom_boxplot(fill = "skyblue") +
+  labs(title = "Boxplot of Diamond Depths by Clarity",subtitle = "Clarity with 8 values", caption = "By Devika", x = "Clarity", y = "Depth")
+```
+
+```{r}
+library(dplyr)
+df %>% 
+  count(color, cut) %>%  
+  ggplot(mapping = aes(x = color, y = cut)) +
+    geom_tile(mapping = aes(fill = n))
+```
+
+```{r}
+ggplot(data=df) +
+  geom_point(mapping=aes(x=carat, price)) +
+  facet_wrap(~cut)
+```
+
+```{r}
+ggplot(data=df) +
+  geom_point(mapping=aes(x=carat, price)) +
+  facet_wrap(~color)
+```
+
+```{r}
+ggplot(data=df) +
+  geom_smooth(mapping=aes(x=carat, y=price)) +
+  facet_wrap(~color)
+```
+
+```{r}
+ggplot(data=df) +
+  geom_point(mapping=aes(x=carat,y=price,color=cut)) +
+  facet_grid(~color)
+```
+
+
