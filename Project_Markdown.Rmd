@@ -1,6 +1,6 @@
 ---
 title: "Explorative Data Analysis in R"
-author: "Devika"
+author: "Thanmai"
 date: "2023-11-18"
 output: html_document
 ---
